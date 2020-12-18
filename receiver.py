@@ -58,17 +58,20 @@ def process_transactions(transactions):
     last_amount = 0
     increment = None
     counter = None
+    amount_fraud = False
 
     def is_transaction_fraudulent(transaction, transactions_set):
         nonlocal id_last_card
         nonlocal last_amount
         nonlocal increment
         nonlocal counter
+        nonlocal amount_fraud
 
         if id_last_card == transaction["idCard"] and (transaction["amount"] - last_amount) == increment and transaction["id"]-counter >= 3:
             id_last_card = transaction["idCard"]
             increment = transaction["amount"] - last_amount
             last_amount = transaction["amount"]
+            amount_fraud = True
             return True
         else:
             counter = transaction["id"]
@@ -107,6 +110,11 @@ def process_transactions(transactions):
         # Sending data back to the API to compute score
         if is_fraud:
             send_value(transaction['id'], is_fraud)
+            if amount_fraud == True:
+                amount_fraud = False
+                send_value(transaction['id']-1, is_fraud)
+                send_value(transaction['id']-2, is_fraud)
+
 
     return True
 
