@@ -4,37 +4,55 @@ test = {'id': 42578, 'firstName': 'anais', 'lastName': 'Ly', 'iban': 'FR76300010
         'idServerTransactionProcessing': 'FR-SIPIOS1002941234567890595', 'merchantCodeCategory': '2', 'merchantId': '4', 'cardType': 'silver', 'transactionProcessingDuration': 122, 'bitcoinPriceAtTransactionTime': 10305, 'ethPriceAtTransactionTime': 290}
 
 
-def is_transaction_fraudulent(transaction, transactions_set):
-    fraudulent_names = ["fraud", "frauder", "superman", "robinwood", "picsou"]
-    if transaction['firstName'] in fraudulent_names:
-        return True
+def outer():
+    id_last_card = None
+    last_amount = 0
+    increment = None
+    counter = None
 
-    fraudulent_coords = [(39.01, 125.73), (6.46, 3.24), (12.97, 77.58)]
-    if (transaction['latitude'], transaction['longitude']) in fraudulent_coords:
-        return True
+    def is_transaction_fraudulent(transaction, transactions_set):
+        nonlocal id_last_card
+        nonlocal last_amount
+        nonlocal increment
+        nonlocal counter
 
-    common_transaction = (
-        transaction["firstName"],
-        transaction["lastName"],
-        transaction["iban"],
-        transaction["amount"],
-        transaction["idCard"],
-        transaction["idServerTransactionProcessing"],
-        transaction["merchantCodeCategory"],
-        transaction["merchantId"],
-        transaction["cardType"],
-        transaction["transactionProcessingDuration"],
-        transaction["bitcoinPriceAtTransactionTime"],
-        transaction["ethPriceAtTransactionTime"]
-    )
+        if id_last_card == transaction["idCard"] and (transaction["amount"] - last_amount) == increment and transaction["id"]-counter >= 3:
+            id_last_card = transaction["idCard"]
+            increment = transaction["amount"] - last_amount
+            last_amount = transaction["amount"]
+            return True
+        else:
+            counter = transaction["id"]
+            id_last_card = transaction["idCard"]
+            increment = transaction["amount"] - last_amount
+            last_amount = transaction["amount"]
 
-    if common_transaction in transactions_set:
-        return True
-    else:
-        transactions_set.add(common_transaction)
+        fraudulent_names = ["fraud", "frauder",
+                            "superman", "robinwood", "picsou"]
+        if transaction['firstName'] in fraudulent_names:
+            return True
 
-    return False
+        fraudulent_coords = [(39.01, 125.73), (6.46, 3.24), (12.97, 77.58)]
+        if (transaction['latitude'], transaction['longitude']) in fraudulent_coords:
+            return True
+
+        common_transaction = (
+            transaction["firstName"],
+            transaction["lastName"],
+            transaction["iban"],
+            transaction["amount"],
+            transaction["idCard"]
+        )
+
+        if common_transaction in transactions_set:
+            return True
+        else:
+            transactions_set.add(common_transaction)
+
+        return False
+
+    return is_transaction_fraudulent(test, set())
 
 
 if __name__ == "__main__":
-    print(is_transaction_fraudulent(test, set()))
+    print(outer())
