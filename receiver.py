@@ -5,6 +5,10 @@ import websockets
 import requests
 import json
 import urllib.parse
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn import metrics
 
 API_HOST = "aml.sipios.com"
 API_PORT = "8080"
@@ -14,6 +18,17 @@ API_WEBSOCKET_TRANSACTION = "ws://" + API_HOST + \
 
 TEAM_NAME = "Les-deter-gens"
 TEAM_PASSWORD = "your_password"
+
+DATA = pd.read_csv("transactions_samples.csv")
+X = DATA[['idServerTransactionProcessing', 'merchantId', 'merchantCodeCategory', 'cardType',
+          'transactionProcessingDuration', 'bitcoinPriceAtTransactionTime', 'ethPriceAtTransactionTime']]  # Features
+Y = DATA['isFraud']  # Labels
+X_train, X_test, Y_train, Y_test = train_test_split(
+    X, Y, test_size=0.3)  # 70% training and 30% test
+clf = RandomForestClassifier(n_estimators=100)
+clf.fit(X_train, Y_train)
+y_pred = clf.predict(X_test)
+print("Accuracy:", metrics.accuracy_score(Y_test, y_pred))
 
 
 def send_value(transaction_id, is_fraudulent):
