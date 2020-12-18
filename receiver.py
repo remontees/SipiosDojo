@@ -6,13 +6,15 @@ import requests
 import json
 import urllib.parse
 
-API_HOST = "35.180.196.161"
+API_HOST = "aml.sipios.com"
 API_PORT = "8080"
 API_ENDPOINT_SCORE = "/transaction-validation"
-API_WEBSOCKET_TRANSACTION = "ws://" + API_HOST + ":" + API_PORT + "/transaction-stream/username/"
+API_WEBSOCKET_TRANSACTION = "ws://" + API_HOST + \
+    ":" + API_PORT + "/transaction-stream/username/"
 
-TEAM_NAME="Les-deter-gens"
-TEAM_PASSWORD="your_password"
+TEAM_NAME = "Les-deter-gens"
+TEAM_PASSWORD = "your_password"
+
 
 def send_value(transaction_id, is_fraudulent):
     url = "http://" + API_HOST + ":" + API_PORT + API_ENDPOINT_SCORE
@@ -32,7 +34,8 @@ def send_value(transaction_id, is_fraudulent):
     }
 
     # sending post request and saving response as response object
-    requests.post(url = url, json = data, )
+    requests.post(url=url, json=data, )
+
 
 async def receive_transaction():
     uri = API_WEBSOCKET_TRANSACTION + TEAM_NAME
@@ -40,7 +43,9 @@ async def receive_transaction():
         while True:
             try:
                 received = json.loads(await websocket.recv())
+                # print(received)
                 process_transactions(received)
+
             except:
                 print('Reconnecting')
                 websocket = await websockets.connect(uri)
@@ -49,17 +54,26 @@ async def receive_transaction():
 def process_transactions(transactions):
     for transaction in transactions:
         is_fraud = is_transaction_fraudulent(transaction)
-
+        print(transaction)
+        print(is_fraud)
         # Sending data back to the API to compute score
-        # send_value(transaction['id'], is_fraud)
+        if is_fraud:
+            send_value(transaction['id'], is_fraud)
 
-    return True;
-
-def is_transaction_fraudulent(transaction):
     return True
 
 
+def is_transaction_fraudulent(transaction):
+    fraudulent_names = ["fraud", "frauder", "superman", "robinwood", "picsou"]
+    if transaction['firstName'] in fraudulent_names:
+        return True
 
-if __name__== "__main__":
+    fraudulent_coords = [(39.01, 125.73), (6.46, 3.24), (12.97, 77.58)]
+    if (transaction['latitude'], transaction['longitude']) in fraudulent_coords:
+        return True
+
+    return False
+
+
+if __name__ == "__main__":
     asyncio.get_event_loop().run_until_complete(receive_transaction())
-
