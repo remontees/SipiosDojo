@@ -52,18 +52,19 @@ async def receive_transaction():
 
 
 def process_transactions(transactions):
+    transactions_set = set()
     for transaction in transactions:
-        is_fraud = is_transaction_fraudulent(transaction)
+        is_fraud = is_transaction_fraudulent(transaction, transactions_set)
         print(transaction)
         print(is_fraud)
         # Sending data back to the API to compute score
-        if is_fraud:
-            send_value(transaction['id'], is_fraud)
+        # if is_fraud:
+        #     send_value(transaction['id'], is_fraud)
 
     return True
 
 
-def is_transaction_fraudulent(transaction):
+def is_transaction_fraudulent(transaction, transactions_set):
     fraudulent_names = ["fraud", "frauder", "superman", "robinwood", "picsou"]
     if transaction['firstName'] in fraudulent_names:
         return True
@@ -71,6 +72,27 @@ def is_transaction_fraudulent(transaction):
     fraudulent_coords = [(39.01, 125.73), (6.46, 3.24), (12.97, 77.58)]
     if (transaction['latitude'], transaction['longitude']) in fraudulent_coords:
         return True
+
+    common_transaction = (
+        transaction["id"],
+        transaction["firstName"],
+        transaction["lastName"],
+        transaction["iban"],
+        transaction["amount"],
+        transaction["idCard"],
+        transaction["idServerTransactionProcessing"],
+        transaction["merchantCodeCategory"],
+        transaction["merchantId"],
+        transaction["cardType"],
+        transaction["transactionProcessingDuration"],
+        transaction["bitcoinPriceAtTransactionTime"],
+        transaction["ethPriceAtTransactionTime"]
+    )
+
+    if common_transaction in transactions_set:
+        return True
+    else:
+        transactions_set.add(common_transaction)
 
     return False
 
