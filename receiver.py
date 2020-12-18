@@ -26,9 +26,9 @@ Y = DATA['isFraud']  # Labels
 X_train, X_test, Y_train, Y_test = train_test_split(
     X, Y, test_size=0.3)  # 70% training and 30% test
 clf = RandomForestClassifier(n_estimators=100)
-clf.fit(X_train, Y_train)
-y_pred = clf.predict(X_test)
-print("Accuracy:", metrics.accuracy_score(Y_test, y_pred))
+# clf.fit(X_train, Y_train)
+# y_pred = clf.predict(X_test)
+# print("Accuracy:", metrics.accuracy_score(Y_test, y_pred))
 
 
 def send_value(transaction_id, is_fraudulent):
