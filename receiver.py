@@ -74,7 +74,6 @@ def is_transaction_fraudulent(transaction, transactions_set):
         return True
 
     common_transaction = (
-        transaction["id"],
         transaction["firstName"],
         transaction["lastName"],
         transaction["iban"],
