@@ -20,15 +20,22 @@ TEAM_NAME = "Les-deter-gens"
 TEAM_PASSWORD = "your_password"
 
 DATA = pd.read_csv("transactions_samples.csv")
+DICT_CARDS = {"gold": 1, "silver": 2, "platinium": 3}
+DATA = DATA.replace({"cardType": DICT_CARDS})
+DATA["idServerTransactionProcessing"] = DATA["idServerTransactionProcessing"].apply(
+    lambda x: x[9:])
+
+print(DATA)
+
 X = DATA[['idServerTransactionProcessing', 'merchantId', 'merchantCodeCategory', 'cardType',
           'transactionProcessingDuration', 'bitcoinPriceAtTransactionTime', 'ethPriceAtTransactionTime']]  # Features
 Y = DATA['isFraud']  # Labels
 X_train, X_test, Y_train, Y_test = train_test_split(
     X, Y, test_size=0.3)  # 70% training and 30% test
 clf = RandomForestClassifier(n_estimators=100)
-# clf.fit(X_train, Y_train)
-# y_pred = clf.predict(X_test)
-# print("Accuracy:", metrics.accuracy_score(Y_test, y_pred))
+clf.fit(X_train, Y_train)
+y_pred = clf.predict(X_test)
+print("Accuracy:", metrics.accuracy_score(Y_test, y_pred))
 
 
 def send_value(transaction_id, is_fraudulent):
@@ -81,6 +88,7 @@ def process_transactions(transactions):
         nonlocal increment
         nonlocal counter
         nonlocal amount_fraud
+        global clf
 
         if id_last_card == transaction["idCard"] and (transaction["amount"] - last_amount) == increment and transaction["id"]-counter >= 3:
             id_last_card = transaction["idCard"]
@@ -116,6 +124,19 @@ def process_transactions(transactions):
         else:
             transactions_set.add(common_transaction)
 
+        transaction_to_predict = [
+            transaction["idServerTransactionProcessing"][9:],
+            transaction["merchantId"],
+            transaction["merchantCodeCategory"],
+            DICT_CARDS[transaction["cardType"]],
+            transaction["transactionProcessingDuration"],
+            transaction["bitcoinPriceAtTransactionTime"],
+            transaction["ethPriceAtTransactionTime"]
+        ]
+        print("prediction: ", clf.predict([transaction_to_predict])[0])
+        if clf.predict([transaction_to_predict])[0]:
+            return True
+
         return False
 
     for transaction in transactions:
@@ -129,7 +150,6 @@ def process_transactions(transactions):
                 amount_fraud = False
                 send_value(transaction['id']-1, is_fraud)
                 send_value(transaction['id']-2, is_fraud)
-
 
     return True
 
