@@ -58,8 +58,8 @@ def process_transactions(transactions):
         print(transaction)
         print(is_fraud)
         # Sending data back to the API to compute score
-        # if is_fraud:
-        #     send_value(transaction['id'], is_fraud)
+        if is_fraud:
+            send_value(transaction['id'], is_fraud)
 
     return True
 
@@ -78,14 +78,7 @@ def is_transaction_fraudulent(transaction, transactions_set):
         transaction["lastName"],
         transaction["iban"],
         transaction["amount"],
-        transaction["idCard"],
-        transaction["idServerTransactionProcessing"],
-        transaction["merchantCodeCategory"],
-        transaction["merchantId"],
-        transaction["cardType"],
-        transaction["transactionProcessingDuration"],
-        transaction["bitcoinPriceAtTransactionTime"],
-        transaction["ethPriceAtTransactionTime"]
+        transaction["idCard"]
     )
 
     if common_transaction in transactions_set:
